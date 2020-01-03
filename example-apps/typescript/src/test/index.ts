@@ -1,8 +1,9 @@
 import should = require("should");
 
-import { createAppTester } from "zapier-platform-core";
+import {createAppTester, HaltedError} from 'zapier-platform-core';
 
 import App from "../index";
+import nock = require('nock');
 const appTester = createAppTester(App);
 
 describe("My Test", () => {
@@ -37,4 +38,28 @@ describe("My Test", () => {
       );
     }
   });
+
+it.only("should throw HaltedError on insufficient funds", async () => {
+    const bundle = {
+        authData: {
+            username: "user",
+            password: "boom"
+        }
+    };
+
+    // Mock HTTP request.
+    nock('https://auth-json-server.zapier-staging.com')
+        .get('/me')
+        .reply(402, {});
+
+    try {
+        const response = await appTester(App.authentication.test, bundle);
+    } catch (e) {
+        e.message.should.containEql(
+            "It seems that your account has insufficient funds to perform your request. Please recharge."
+        );
+        // This should be true if HaltedError export worked.
+        e.should.be.an.instanceof(HaltedError);
+    }
+});
 });

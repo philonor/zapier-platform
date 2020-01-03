@@ -1,4 +1,4 @@
-import { ZObject } from "zapier-platform-core";
+import {HaltedError, ZObject} from 'zapier-platform-core';
 
 const test = async (z: ZObject /*, bundle*/) => {
   // Normally you want to make a request to an endpoint that is either specifically designed to test auth, or one that
@@ -12,6 +12,8 @@ const test = async (z: ZObject /*, bundle*/) => {
   // Raise an error to show
   if (response.status === 401) {
     throw new Error("The username and/or password you supplied is incorrect");
+  } else if (response.status === 402) {
+    throw new Error("It seems that your account has insufficient funds to perform your request. Please recharge.") as HaltedError;
   }
   return response;
 };
